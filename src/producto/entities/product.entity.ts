@@ -1,12 +1,9 @@
-// src/products/product.entity.ts
 import { Category } from 'src/categorias/category.entity';
 import { User } from 'src/users/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
 } from 'typeorm';
 
@@ -26,14 +23,24 @@ export class Product {
 
   @Column({ type: 'int', default: 0 })
   stock: number;
+  
+  // --- CAMPOS DE AUDITORÍA ---
+  @Column({ type: 'boolean', default: true })
+  activo: boolean;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt: Date;
+  @Column({ type: 'varchar', length: 20, default: 'Admin' })
+  UserAlta: string;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-  updatedAt: Date;
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  FechaAlta: Date;
 
-  // --- Relaciones ---
+  @Column({ type: 'varchar', length: 20, default: '' })
+  UserMod: string;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  FechaMod: Date;
+
+  // --- RELACIONES ---
   @ManyToOne(() => Category, (category) => category.products)
   category: Category;
 

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -16,7 +17,7 @@ export class UsersService {
     return this.usersRepository.find({ relations: ['role'] });
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: number): Promise<User | null> {
     const user = await this.usersRepository.findOne({
       where: { id },
       relations: ['role'],
@@ -27,19 +28,27 @@ export class UsersService {
     return user;
   }
 
-  create(createUserDto: CreateUserDto): Promise<User> {
-    // IMPORTANTE: En una aplicación real, la contraseña debe ser "hasheada"
-    // antes de guardarla. Por ejemplo, usando la librería bcrypt.
-    // const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    // const newUser = this.usersRepository.create({
-    //   ...createUserDto,
-    //   password: hashedPassword,
-    // });
-    const newUser = this.usersRepository.create(createUserDto);
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email }, relations: ['role'] });
+  }
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const { password, roleId, ...userData } = createUserDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = this.usersRepository.create({
+      ...userData,
+      password: hashedPassword,
+      role: { id: roleId },
+    });
+
     return this.usersRepository.save(newUser);
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    if (updateUserDto.password) {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
     const user = await this.usersRepository.preload({
       id: id,
       ...updateUserDto,

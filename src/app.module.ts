@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Category } from './categorias/category.entity';
+import { AuthModule } from './auth/auth.module';
+
 import { User } from './users/user.entity';
-import { Role } from './role/role.entity';
-import { UsersModule } from './users/users.module';
-import { RoleModule } from './role/role.module';
+import { IsUniqueConstraint } from './validators/is-unique.validator';
 import { Product } from './producto/entities/product.entity';
-import { ProductsModule } from './producto/producto.module';
+import { Category } from './categorias/category.entity';
+import { Role } from './role/role.entity';
 import { CategoriesModule } from './categorias/categorias.module';
+import { ProductsModule } from './producto/producto.module';
+import { RoleModule } from './role/role.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -16,17 +19,18 @@ import { CategoriesModule } from './categorias/categorias.module';
       host: 'localhost',
       port: 3306,
       username: 'root',
-      password: '', // <-- TU CONTRASEÑA
+      password: '', // Tu contraseña
       database: 'bd_localspace',
       entities: [Product, Category, User, Role],
-      synchronize: true, // true solo para desarrollo
+      synchronize: true,
     }),
-    UsersModule,
-    RoleModule,
+    AuthModule,
     CategoriesModule,
     ProductsModule,
+    RoleModule,
+    UsersModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [IsUniqueConstraint], // <-- Añade el validador aquí
 })
 export class AppModule {}

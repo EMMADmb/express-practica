@@ -1,19 +1,22 @@
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; 
 import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { useContainer } from 'class-validator';
+import { json } from 'express';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const config = new DocumentBuilder()
-    .setTitle('API de Productos')
-    .setDescription('Una API de ejemplo para la gestión de productos.')
-    .setVersion('1.0')
-    .addTag('productos')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document); // La URL para la documentación será /api-docs
+  app.enableCors();
 
-  await app.listen(3001);
+  app.use(json({ limit: '5mb' }));
+
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
 }
-bootstrap();

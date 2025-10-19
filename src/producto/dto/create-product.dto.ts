@@ -1,15 +1,37 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsNumber, IsPositive, MinLength, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateProductDto {
-  @ApiProperty({ description: 'El nombre del producto', example: 'Laptop XPS 15' })
+  @IsString({ message: 'El nombre debe ser texto' })
+  @IsNotEmpty({ message: 'El nombre no puede estar vacío' })
+  @MinLength(3, { message: 'El nombre debe tener al menos 3 caracteres' })
   name: string;
 
-  @ApiProperty({ description: 'Una breve descripción del producto' })
+  @IsString()
+  @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ description: 'El precio del producto', example: 2500 })
+  @IsNumber({}, { message: 'El precio debe ser un número' })
+  @IsPositive({ message: 'El precio debe ser un valor positivo' })
   price: number;
 
-  @ApiProperty({ description: 'La cantidad disponible en inventario', example: 15 })
+  @IsNumber()
+  @IsPositive()
   stock: number;
+
+  @IsNumber()
+  @IsPositive()
+  categoryId: number;
+
+  @IsNumber()
+  @IsPositive()
+  userId: number;
+  
+  // --- CAMPOS DE AUDITORÍA OPCIONALES ---
+  @IsOptional()
+  @IsBoolean()
+  activo?: boolean;
+
+  @IsOptional()
+  @IsString()
+  UserAlta?: string;
 }
