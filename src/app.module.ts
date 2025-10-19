@@ -40,7 +40,7 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config'; // <-- Importa ConfigModule
+import { ConfigModule, ConfigService } from '@nestjs/config'; // <-- Importa ConfigModule
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/user.entity';
 import { IsUniqueConstraint } from './validators/is-unique.validator';
@@ -54,21 +54,25 @@ import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    // 1. EL CONFIGMODULE DEBE IR PRIMERO Y SER GLOBAL
+    // 1. ConfigModule debe ir primero y ser Global
     ConfigModule.forRoot({
       isGlobal: true,
     }),
     
-    // 2. AHORA CONFIGURAMOS TYPEORM LEYENDO ESAS VARIABLES
-    TypeOrmModule.forRoot({
-      // Agregamos '!' a todas las variables de entorno de tipo string/number para asertar que existen.
-      host: process.env.DB_HOST!, 
-      port: parseInt(process.env.DB_PORT!, 10), 
-      username: process.env.DB_USERNAME!,
-      password: process.env.DB_PASSWORD!,
-      database: process.env.DB_DATABASE!,
-      entities: [Product, Category, User, Role],
-      synchronize: true, // Esto solo debería estar true en desarrollo
+    // 2. USAR CONFIGURACIÓN ASÍNCRONA PARA GARANTIZAR QUE LAS VARIABLES ESTÉN CARGADAS
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule], // Dependemos de que ConfigModule se cargue
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get<string>('DB_HOST'), // Lee el HOST
+        port: parseInt(configService.get<string>('DB_PORT')!, 10), // Lee el PORT
+        username: configService.get<string>('DB_USERNAME'), // Lee el USERNAME
+        password: configService.get<string>('DB_PASSWORD'), // Lee la PASSWORD
+        database: configService.get<string>('DB_DATABASE'), // Lee la DATABASE
+        entities: [Product, Category, User, Role], // Aquí listamos todas las entidades
+        synchronize: true,
+      }),
+      inject: [ConfigService], // Inyecta el servicio de configuración
     }),
     
     // 3. EL RESTO DE MÓDULOS DE FUNCIÓN
